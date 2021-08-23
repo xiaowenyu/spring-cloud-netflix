@@ -109,6 +109,7 @@ public class SpringClientFactory extends NamedContextFactory<RibbonClientSpecifi
 			}
 
 			if (context != null) {
+				// ILoadBalancer直接通过注解注入进来
 				context.getAutowireCapableBeanFactory().autowireBean(result);
 			}
 		}

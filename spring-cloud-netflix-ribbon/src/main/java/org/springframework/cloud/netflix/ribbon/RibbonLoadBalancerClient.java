@@ -48,6 +48,7 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 		this.clientFactory = clientFactory;
 	}
 
+	// 替换uri 操作
 	@Override
 	public URI reconstructURI(ServiceInstance instance, URI original) {
 		Assert.notNull(instance, "instance can not be null");
@@ -70,11 +71,13 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 			uri = updateToSecureConnectionIfNeeded(original, clientConfig,
 					serverIntrospector, server);
 		}
+		// 执行替换操作
 		return context.reconstructURIWithServer(server, uri);
 	}
 
 	@Override
 	public ServiceInstance choose(String serviceId) {
+		// 根据serviceId找到ServiceInstance
 		return choose(serviceId, null);
 	}
 
@@ -85,6 +88,7 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 	 * @return the selected {@link ServiceInstance}
 	 */
 	public ServiceInstance choose(String serviceId, Object hint) {
+		// 实时生成ILoadBalancer，或者根据注解获得加入
 		Server server = getServer(getLoadBalancer(serviceId), hint);
 		if (server == null) {
 			return null;
@@ -93,6 +97,7 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 				serverIntrospector(serviceId).getMetadata(server));
 	}
 
+	// 执行拦截restTemplate 操作
 	@Override
 	public <T> T execute(String serviceId, LoadBalancerRequest<T> request)
 			throws IOException {
@@ -113,7 +118,9 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 	 */
 	public <T> T execute(String serviceId, LoadBalancerRequest<T> request, Object hint)
 			throws IOException {
+		// 直接生成或者注解中获取一个，大概率是ZoneAwareLoadBalancer
 		ILoadBalancer loadBalancer = getLoadBalancer(serviceId);
+		// 获取default的服务
 		Server server = getServer(loadBalancer, hint);
 		if (server == null) {
 			throw new IllegalStateException("No instances available for " + serviceId);
@@ -186,9 +193,11 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 			return null;
 		}
 		// Use 'default' on a null hint, or just pass it on?
+		// 触发loadBalancer的 chooseServer
 		return loadBalancer.chooseServer(hint != null ? hint : "default");
 	}
 
+	// 生成LoadBalancer
 	protected ILoadBalancer getLoadBalancer(String serviceId) {
 		return this.clientFactory.getLoadBalancer(serviceId);
 	}

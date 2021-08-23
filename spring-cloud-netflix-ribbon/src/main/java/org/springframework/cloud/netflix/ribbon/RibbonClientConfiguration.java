@@ -69,6 +69,7 @@ import static org.springframework.cloud.netflix.ribbon.RibbonUtils.updateToSecur
 // https://github.com/spring-cloud/spring-cloud-netflix/issues/2086#issuecomment-316281653
 @Import({ HttpClientConfiguration.class, OkHttpRibbonConfiguration.class,
 		RestClientRibbonConfiguration.class, HttpClientRibbonConfiguration.class })
+// 初始化 默认的loaderBalance对象
 public class RibbonClientConfiguration {
 
 	/**
@@ -141,17 +142,20 @@ public class RibbonClientConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ServerListUpdater ribbonServerListUpdater(IClientConfig config) {
+		// 默认轮询服务更新
 		return new PollingServerListUpdater(config);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
+	// 缺失时加载此bean
 	public ILoadBalancer ribbonLoadBalancer(IClientConfig config,
 			ServerList<Server> serverList, ServerListFilter<Server> serverListFilter,
 			IRule rule, IPing ping, ServerListUpdater serverListUpdater) {
 		if (this.propertiesFactory.isSet(ILoadBalancer.class, name)) {
 			return this.propertiesFactory.get(ILoadBalancer.class, config, name);
 		}
+		// 构造DynamicServerListLoadBalancer 对象，此对象为执行对象
 		return new ZoneAwareLoadBalancer<>(config, rule, ping, serverList,
 				serverListFilter, serverListUpdater);
 	}
